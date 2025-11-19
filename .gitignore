@@ -1,0 +1,31 @@
+# 공통
+**/node_modules/
+**/dist/
+**/build/
+**/.cache/
+**/coverage/
+*.tsbuildinfo
+
+# Next/Vite/React
+**/.next/
+**/out/
+**/.turbo/
+**/.vite/
+**/.vercel/
+
+# Hardhat/Foundry/Truffle
+**/artifacts/
+**/cache/
+**/typechain*/
+**/broadcast/
+**/build/contracts/
+
+# 환경/OS/IDE
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json

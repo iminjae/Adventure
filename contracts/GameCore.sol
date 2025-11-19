@@ -79,6 +79,17 @@ contract GameCore is AccessControl, Pausable, ReentrancyGuard {
 
     uint256 private _randNonce; // 호출별 nonce
 
+    /* ---------------- 프로모(면접자 코드) ---------------- */
+
+    // 켜고/끄기 (운영)
+    bool public featPromo = true;
+
+    // 코드 검증: keccak256(bytes(code)) == promoCodeHash 일치해야 지급
+    bytes32 private promoCodeHash;
+
+    // 지급 금액(기본: 50 ATT). 18 decimals 기준
+    uint256 public promoRewardATT = 50 ether;
+
     /* ---------------- 이벤트 ---------------- */
 
     event TreasurySet(address treasury);
@@ -90,6 +101,8 @@ contract GameCore is AccessControl, Pausable, ReentrancyGuard {
     event ExpeditionStarted(address indexed user, uint256 indexed tokenId, uint32 endTime, uint8 grade);
     event ExpeditionClaimed(address indexed user, uint256 indexed tokenId, uint256 attReward, bool fragDrop);
     event UpgradeAttempt(address indexed user, uint8 fromGrade, bool success, uint8 newGrade);
+    event PromoConfigSet(bytes32 codeHash, uint256 rewardATT, bool enabled);
+    event PromoRedeemed(address indexed user, uint256 amountATT);
 
     /* ---------------- 생성자 ---------------- */
 
@@ -152,8 +165,11 @@ contract GameCore is AccessControl, Pausable, ReentrancyGuard {
     /* ---------------- Utils ---------------- */
 
     // 한국시간 기준 day index(하루 1회 체크용)
+    /// @dev KST 09:00(=UTC 00:00) 기준으로 dayIndex가 바뀐다.
+    ///      즉, UTC 자정마다 새로운 dayIndex가 시작됨.
     function _dayIndexKST(uint256 ts) internal pure returns (uint64) {
-        return uint64((ts + KST_OFFSET) / 1 days);
+        // KST 09:00 == UTC 00:00 → UTC 자정 경계 사용
+        return uint64(ts / 1 days);
     }
 
     // 의사난수: blockhash(n-1)와 prevrandao를 섞고, 호출자+nonce를 추가
@@ -314,4 +330,102 @@ contract GameCore is AccessControl, Pausable, ReentrancyGuard {
             emit UpgradeAttempt(msg.sender, g, false, 0);
         }
     }
+
+    /// @notice 탐험 상세 상태 조회
+    /// @return active     탐험 중 여부
+    /// @return owner      시작한 소유자
+    /// @return grade      시작 시 등급
+    /// @return secondsNeeded 설정된 전체 소요 시간(초)
+    /// @return endTime    종료 예정 시각(Unix)
+    /// @return elapsed    경과 시간(초, active일 때만 의미)
+    /// @return remaining  남은 시간(초, 0이면 종료됨)
+    /// @return claimable  시간상 청구 가능 여부(소유자 검증은 아님)
+    function getExpeditionStatus(uint256 tokenId)
+        external
+        view
+        returns (
+            bool active,
+            address owner,
+            uint8 grade,
+            uint32 secondsNeeded,
+            uint32 endTime,
+            uint32 elapsed,
+            uint32 remaining,
+            bool claimable
+        )
+    {
+        ExpeditionState memory s = expd[tokenId];
+        active = s.active;
+        owner = s.owner;
+        grade = s.gradeAtStart;
+
+        ExpeditionConf memory c = expeditionOf[grade];
+        secondsNeeded = c.secondsNeeded;
+        endTime = s.endTime;
+
+        if (!active) {
+            return (false, owner, grade, secondsNeeded, endTime, 0, 0, false);
+        }
+
+        uint256 nowTs = block.timestamp;
+        if (nowTs >= endTime) {
+            // 종료됨
+            return (true, owner, grade, secondsNeeded, endTime, secondsNeeded, 0, true);
+        } else {
+            uint32 rem = uint32(endTime - nowTs);
+            uint32 el = uint32(secondsNeeded - rem);
+            return (true, owner, grade, secondsNeeded, endTime, el, rem, false);
+        }
+    }
+
+    /// @notice 출석 가능 여부 + 다음 리셋 시각 + 남은 시간(초)
+    /// @dev  리셋은 KST 09:00(=UTC 00:00) 기준으로 일괄 적용됨(전 유저 동일).
+    /// @return claimable 지금 슬롯(금일)에서 아직 수령 전이면 true
+    /// @return nextClaimAt 다음 리셋(UTC 자정) UNIX 타임스탬프
+    /// @return remaining   남은 초. claimable이면 0
+    function getDailyStatus(address user)
+        external
+        view
+        returns (bool claimable, uint32 nextClaimAt, uint32 remaining)
+    {
+        uint256 nowTs = block.timestamp;
+
+        // 오늘(dayIndex) 산출: KST 09:00 = UTC 00:00 경계
+        uint64 today = _dayIndexKST(nowTs);
+        bool can = lastClaimDay[user] < today;
+
+        // 다음 리셋 시각: 다음 UTC 자정 = ((now/86400)+1)*86400
+        uint256 nextAt256 = ((nowTs / 1 days) + 1) * 1 days;
+
+        uint32 nextAt = uint32(nextAt256); // 2106년까지 안전
+        uint32 rem = can ? 0 : (nextAt > nowTs ? uint32(nextAt - nowTs) : 0);
+
+        return (can, nextAt, rem);
+    }
+
+    /// @notice 면접자 프로모 코드 설정/보상/토글
+    /// @param codeHash keccak256(bytes(원하는코드)) 결과
+    /// @param rewardATT 지급할 ATT 수량(18 decimals)
+    /// @param enabled true면 기능 on
+    function setPromoConfig(bytes32 codeHash, uint256 rewardATT, bool enabled)
+        external
+        onlyRole(ADMIN)
+    {
+        promoCodeHash = codeHash;
+        promoRewardATT = rewardATT;
+        featPromo = enabled;
+        emit PromoConfigSet(codeHash, rewardATT, enabled);
+    }
+
+    /// @notice 면접자용 코드 입력 → 일치 시 ATT 지급 (제한 없음)
+    function redeemPromo(string calldata code) external whenNotPaused nonReentrant {
+        require(featPromo, "promo off");
+        require(promoCodeHash != bytes32(0), "no code");
+        bytes32 digest = keccak256(bytes(code));
+        require(digest == promoCodeHash, "invalid code");
+
+        ATT.mint(msg.sender, promoRewardATT);
+        emit PromoRedeemed(msg.sender, promoRewardATT);
+    }
+    
 }

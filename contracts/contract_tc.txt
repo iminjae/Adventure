@@ -1,0 +1,63 @@
+0) 준비물
+
+    1. Admin(배포자)
+    2. User1(테스트 유저1)
+    3. 컨트랙트 4개의 배포 주소
+
+
+1) 권한/연결 세팅(admin) 주소는 bytes
+
+    1.	AdventureNFT → setLocker(GameCore)
+    2.	AttendToken → grantRole(MINTER_ROLE, GameCore)
+    3.	Fragment1155 → grantRole(MINTER_ROLE, GameCore)
+    4.	Fragment1155 → grantRole(BURNER_ROLE, GameCore)
+    5.	AdventureNFT → grantRole(MINTER_ROLE, GameCore)
+    6.	AdventureNFT → grantRole(BURNER_ROLE, GameCore)
+    7.	hasRole(role, GameCore)로 각 롤이 실제로 들어갔는지 확인.
+
+    * MINTER_ROLE()/BURNER_ROLE()/DEFAULT_ADMIN_ROLE()은 READ에서 눌러 bytes32 값 복사 가능.
+
+
+2) 출석 테스트(User1)
+
+    1. GameCore.claimDaily() 호출
+
+        기대 : ATT.balanceOf(User1)가 dailyAmount() 만큼 증가, DailyClaim 이벤트
+
+    2. 같은날 재호출
+
+        기대 : revert(“already claimed”) 확인
+
+
+3) 조각 구매 테스트(User1)
+
+    1. User1이 ATT 보유중인지 확인. (claimDaily를 위에서 했기 때문에 이미 보유).
+    2. User1 → ATT.approve(GameCore, FragmentPriceATT()*N)
+    3. User1 → GameCore.buyFragments(N)
+        
+        기대 :
+                FRG.balanceOf(User1, 1)의 값이 + N
+                ATT.balanceOf(User1) 감소, ATT.balanceOf(treasury) 증가
+
+
+4) 합성(조각 → NFT) 테스트(User1)
+
+    1. User1 → GameCore.craftFromFragments()
+
+        기대 : CraftAttempt(User, success, mintedGrade) 이벤트
+            
+            성공 :  ADV 1개 추가 
+            실패 : 조각 5개 삭제됨
+
+5) 탐험 테스트(User1)
+
+    1. 합성 성공 결과로 얻은 NFT 확보
+
+    2. User1 → startExpedition(tokenId)
+
+        기대 : expd[tokenId].active == true, ADV.locked(tokenId) == true, ExpeditionStarted 이벤트
+              User1 →  getExpeditionStatus(tokenId) 로 진행중인 상태 확인
+              바로 claimExpedition 호출 시 “not ended” 리버트 확인
+
+
+    
