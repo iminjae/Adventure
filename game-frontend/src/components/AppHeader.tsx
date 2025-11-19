@@ -28,8 +28,8 @@ export default function AppHeader(){
         <div className="flex items-center gap-2">
           <nav className="hidden md:flex items-center gap-1 mr-2">
             <Nav href="/" label="Dashboard"/>
-            <Nav href="/attendance" label="Attendance"/>
-            <Nav href="/fragments" label="Fragments"/>
+            {/* <Nav href="/attendance" label="Attendance"/> */}
+            {/* <Nav href="/fragments" label="Fragments"/> */}
             <Nav href="/craft" label="Craft"/>
             <Nav href="/expedition" label="Expedition"/>
             <Nav href="/upgrade" label="Upgrade"/>

@@ -3,6 +3,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import SuccessModal from "@/components/ui/SuccessModal";
 import ErrorModal from "@/components/ui/ErrorModal";
+import CountdownBadge from "@/components/ui/CountdownBadge";
 
 import { useWallet } from "@/hooks/useWallet";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -61,17 +62,11 @@ export default function Home(){
     }
   }
 
-  const claimLabel = !addr
-    ? "지갑 연결"
-    : daily.claimable
-      ? `출석 받기 (+${daily.dailyAmt} ATT)`
-      : `다음 출석 ${/* HH:MM:SS */ (()=>{
-          const sec = daily.remaining|0;
-          const h = String(Math.floor(sec/3600)).padStart(2,"0");
-          const m = String(Math.floor((sec%3600)/60)).padStart(2,"0");
-          const s = String(sec%60).padStart(2,"0");
-          return `${h}:${m}:${s}`;
-        })()}`;
+const claimLabel = !addr
+ ? "지갑 연결"
+ : daily.claimable
+   ? `출석 받기 (+${daily.dailyAmt} ATT)`
+   : `출석 완료`;
 
   return (
     <section className="grid grid-cols-12 gap-4">
@@ -81,21 +76,31 @@ export default function Home(){
           <h1 className="section-title text-2xl mt-1">대시보드</h1>
           <div className="text-sm text-muted mt-1">출석 · 조각 · 합성</div>
 
-          <div className="mt-4 flex gap-2">
-            {!addr ? (
-              <Button className="btn-primary" onClick={connect}>지갑 연결</Button>
-            ) : (
-              <Button
-                className={`btn-primary ${daily.claimable ? "" : "opacity-80"}`}
-                loading={running}                        // ⬅️ 스피너
-                onClick={onClaim}
-                title={daily.claimable ? "지금 출석 가능" : "출석 대기 중"}
-              >
-                {claimLabel}
-              </Button>
-            )}
-          </div>
-          
+             <div className="mt-5 flex flex-wrap items-center gap-10">
+      
+              <CountdownBadge
+                seconds={daily.claimable ? 0 : (daily.remaining | 0)}
+                variant="slate"  // "purple" 로 바꾸면 보라톤
+              />
+
+              {!addr ? (
+                <Button className="btn-primary px-6 h-11 text-[15px]" onClick={connect}>
+                  지갑 연결
+                </Button>
+              ) : (
+                <Button
+                  className={`btn-primary px-10 h-11 text-[15px] ${
+                    daily.claimable ? "" : "opacity-60 cursor-not-allowed"
+                  }`}
+                  loading={running}
+                  onClick={daily.claimable ? onClaim : undefined}
+                  aria-disabled={!daily.claimable}
+                  title={daily.claimable ? "출석" : "출석 완료"}
+                >
+                  {claimLabel}
+                </Button>
+              )}
+            </div>
         </div>
         <PromoPanel
           sc={sc}
@@ -114,14 +119,14 @@ export default function Home(){
         <div className="text-2xl font-semibold mt-1">{dash.loading ? "…" : dash.att}</div>
       </Card>
       <Card className="col-span-12 md:col-span-4">
-        <div className="text-sm text-muted">Fragments (id:1)</div>
+        <div className="text-sm text-muted">Fragments</div>
         <div className="text-2xl font-semibold mt-1">{dash.loading ? "…" : dash.frg}</div>
       </Card>
       <Card className="col-span-12 md:col-span-4">
         <div className="text-sm text-muted">NFTs</div>
         <div className="text-2xl font-semibold mt-1">{dash.loading ? "…" : dash.nftCount}</div>
       </Card>
-          <DocsPanel />
+      <DocsPanel />
       <SuccessModal open={okOpen} title="출석 성공" subtitle={okMsg} onClose={()=>setOkOpen(false)} />
       <ErrorModal open={errOpen} title="출석 실패" message={errMsg} onClose={()=>setErrOpen(false)} />
     </section>
