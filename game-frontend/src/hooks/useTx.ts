@@ -38,10 +38,18 @@ export function useTx(){
       // 전역 오버레이 on
       setTxBusy(true, `${label} 처리중…`, tx.hash);
 
-      // 3) 컨펌 대기
-      const rc = await tx.wait(); // 타입: TransactionReceipt | null
 
-      // 🔐 null 가드: 타임아웃/드랍/리오그 등으로 영수증을 못 받았을 수 있음
+    // 3) 컨펌 대기: 0컨펌(블록에 포함되는 즉시)
+    let rc = await tx.wait(0);
+    // 일부 Provider가 드물게 null 주면 보강
+    if (!rc) {
+        const p: any = (tx as any).provider ?? (send as any)?.runner?.provider;
+        if (p?.waitForTransaction) {
+        rc = await p.waitForTransaction(tx.hash, 0);
+        }
+    }
+
+      // null 가드: 타임아웃/드랍/리오그 등으로 영수증을 못 받았을 수 있음
       if (rc == null) {
         toast.dismiss(toastId);
         toast.error(`${label}: 네트워크에서 영수증을 받지 못했습니다. 잠시 후 다시 확인하세요.`);

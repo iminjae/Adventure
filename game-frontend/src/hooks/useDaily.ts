@@ -1,24 +1,28 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Contract, formatUnits } from "ethers";
+import { CFG } from "@/config";
+import COREABI from "@/abi/CORE.json";
 import { ro } from "@/lib/contracts";
-import { formatUnits } from "ethers";
 
-// KST(+9) 자정 계산
+// (폴백 계산은 남겨둠 — 실패 시 '버튼이 아예 막히는' 일을 피함)
 function kstNextMidnight(nowSec: number) {
   const todayKST = Math.floor((nowSec + 9 * 3600) / 86400);
   return (todayKST + 1) * 86400 - 9 * 3600;
 }
 
 type DailyState = {
-  loading: boolean;
+  loading: boolean;   // 첫 로딩에만 true로 쓰고, 이후엔 soft refresh로 깜빡임 방지
+  hydrated: boolean;  // 최소 1회 온체인 값을 받았는지
   claimable: boolean;
-  nextAt: number;   // unix
+  nextAt: number;
   remaining: number;
-  dailyAmt: string; // formatted
+  dailyAmt: string;
 };
 
-const empty: DailyState = {
-  loading: false,
+const init: DailyState = {
+  loading: true,
+  hydrated: false,
   claimable: false,
   nextAt: 0,
   remaining: 0,
@@ -26,101 +30,90 @@ const empty: DailyState = {
 };
 
 export function useDaily(addr?: string) {
-  const [st, setSt] = useState<DailyState>(empty);
-
-  // 🔒 현재 주소 기준으로만 상태 반영하도록 하는 "요청 토큰"
+  const [st, setSt] = useState<DailyState>(init);
   const reqIdRef = useRef(0);
-  // ⏱️ 인터벌 핸들
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // 주소별 새로고침 (이 주소로 시작된 요청만 반영)
-  const refresh = useCallback(async () => {
-    if (!addr) return;
-    const myReq = ++reqIdRef.current; // 새 요청 토큰
-    setSt((s) => ({ ...s, loading: true }));
+  // ✅ provider와 soft 옵션 지원: soft=true면 loading 토글 안 함(깜빡임 제거)
+  const refresh = useCallback(
+    async (opts?: { provider?: any; soft?: boolean }) => {
+      if (!addr) { setSt(init); return; }
+      const myReq = ++reqIdRef.current;
 
-    try {
-      // 금액은 지갑에 상관없이 동일(프로토콜 파라미터)
-      const amt = await ro.CORE.dailyAmount();
+      setSt(s => (opts?.soft || s.hydrated) ? s : { ...s, loading: true });
 
-      // 주소별 상태
-      const status = await ro.CORE.getDailyStatus(addr);
+      try {
+        const prov =
+          opts?.provider ??
+          (ro as any).CORE?.runner?.provider ??
+          (ro as any).ATT?.runner?.provider;
 
-      // 🧵 주소가 바뀌어 더 최신 요청이 있으면 이 결과는 버림
-      if (reqIdRef.current !== myReq) return;
+        const CORE = new Contract(CFG.addresses.CORE, COREABI, prov);
+        const [amt, status] = await Promise.all([
+          CORE.dailyAmount(),
+          CORE.getDailyStatus(addr),
+        ]);
+        if (reqIdRef.current !== myReq) return;
 
-      const dailyAmt = formatUnits(amt, 18);
-      const nextAt = Number(status.nextClaimAt);
-      const remaining = Number(status.remaining);
+        setSt({
+          loading: false,
+          hydrated: true,
+          claimable: Boolean(status.claimable),
+          nextAt: Number(status.nextClaimAt),
+          remaining: Math.max(0, Number(status.remaining)),
+          dailyAmt: formatUnits(amt, 18),
+        });
+      } catch {
+        if (reqIdRef.current !== myReq) return;
+        // 실패해도 첫 페인트를 막진 않음
+        const now = Math.floor(Date.now() / 1000);
+        const na = kstNextMidnight(now);
+        setSt({
+          loading: false,
+          hydrated: true,
+          claimable: true,
+          nextAt: na,
+          remaining: Math.max(0, na - now),
+          dailyAmt: st.dailyAmt || "0",
+        });
+      }
+    },
+    [addr]
+  );
 
-      setSt({
-        loading: false,
-        claimable: Boolean(status.claimable),
-        nextAt,
-        remaining,
-        dailyAmt,
-      });
-    } catch {
-      // 폴백: 뷰 함수가 없거나 실패해도 UI가 막히지 않게
-      if (reqIdRef.current !== myReq) return;
-      const now = Math.floor(Date.now() / 1000);
-      const na = kstNextMidnight(now);
-      setSt({
-        loading: false,
-        claimable: true, // 낙관적으로 눌러보게
-        nextAt: na,
-        remaining: Math.max(0, na - now),
-        dailyAmt: st.dailyAmt || "0",
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addr]);
-
-  // 주소가 바뀌면: (1) 모든 이전 타이머 종료 (2) 상태 초기화 (3) 새로고침 (4) 새 타이머 시작
+  // 주소 바뀔 때: 타이머 정리 → 상태 초기화 → 1회 강제 로드 → 초당 남은시간 갱신
   useEffect(() => {
-    // 이전 인터벌 정리
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    // 이전 요청 무효화
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     reqIdRef.current++;
-
-    // 상태 초기화(주소 전환 즉시 과거 값 지우기)
-    setSt(empty);
+    setSt(init);
 
     if (!addr) return;
 
-    // 즉시 한 번 로드
-    refresh();
+    void refresh();
 
-    // 새 인터벌: 현재 상태 기반으로만 남은 시간 갱신
     timerRef.current = setInterval(() => {
-      setSt((prev) => {
-        if (!prev.nextAt) return prev;
+      setSt(prev => {
+        if (!prev.hydrated || !prev.nextAt) return prev;
         const now = Math.floor(Date.now() / 1000);
         const rem = Math.max(0, prev.nextAt - now);
-        // claimable은 컨트랙트 판단 우선. 단, 자정을 지나면 true로 전환.
-        const claimable = prev.claimable || rem === 0;
-        return { ...prev, remaining: claimable ? 0 : rem, claimable };
+        // 0 도달 시 깜빡임 없이 soft refresh
+        if (rem === 0) { void refresh({ soft: true }); }
+        return { ...prev, remaining: rem };
       });
     }, 1000);
 
-    // 언마운트/주소 변경 시 정리
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     };
-  }, [addr, refresh]);
+  }, [addr]);
 
   return {
     loading: st.loading,
+    hydrated: st.hydrated,
     claimable: st.claimable,
     nextAt: st.nextAt,
     remaining: st.remaining,
     dailyAmt: st.dailyAmt,
-    refresh,
+    refresh, // provider/soft 주입 가능
   };
 }

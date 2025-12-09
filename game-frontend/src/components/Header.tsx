@@ -19,7 +19,8 @@ export default function Header(){
           <a href="/upgrade">Upgrade</a>
           <a href="/admin">Admin</a>
         </div>
-        <Button variant="primary" onClick={connect}>
+        <Button 
+           onClick={connect}>
           {addr ? short(addr) : "지갑 연결"}
         </Button>
       </div>

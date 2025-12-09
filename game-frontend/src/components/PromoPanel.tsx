@@ -8,9 +8,10 @@ import toast from "react-hot-toast";
 type Props = {
   sc?: ReturnType<typeof withSigner>; // signer 바운드된 컨트랙트 모음 (useWallet에서 넘겨줌)
   onAfterSuccess?: () => Promise<void> | void;
+  bare?: boolean;
 };
 
-export default function PromoPanel({ sc, onAfterSuccess }: Props) {
+export default function PromoPanel({ sc, onAfterSuccess, bare = false }: Props) {
   const addr = useApp((s) => s.addr);
   const { runTx, running } = useTx();
   const [code, setCode] = useState("");
@@ -74,6 +75,21 @@ export default function PromoPanel({ sc, onAfterSuccess }: Props) {
     }
   }
 
+  const inner = (
+    <>
+      <h3 className="text-xl font-semibold mb-3">면접자 코드 보상</h3>
+      <p className="text-sm text-white/70 mb-3 leading-relaxed">
+        면접자가 제공한 코드를 입력하면 보상 토큰을 받을 수 있어요.
+        <br />
+        <span className="text-xs">
+          ⚠️ 입력한 코드는 대소문자/공백까지 정확히 입력하세요.
+        </span>
+      </p>
+      {/* 입력 + 버튼 ... 그대로 */}
+      {/* 푸터 라인 ... 그대로 */}
+    </>
+  );
+
   return (
     <section className="card p-5 mt-5">
       <h3 className="text-lg font-semibold mb-2">면접자 코드 보상</h3>
@@ -89,7 +105,7 @@ export default function PromoPanel({ sc, onAfterSuccess }: Props) {
       <div className="flex gap-2">
         <input
           type="text"
-          placeholder="예: INTERVIEW-2025"
+          placeholder="이력서에 첨부된 코드 입력"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           onKeyDown={onKeyDown}

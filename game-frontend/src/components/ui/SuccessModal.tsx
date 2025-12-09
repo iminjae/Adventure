@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import Confetti from "@/components/effects/Confetti";
+
 
 export default function SuccessModal({
   open, title="합성 성공!", subtitle, onClose
@@ -9,7 +9,6 @@ export default function SuccessModal({
     <AnimatePresence>
       {open && (
         <>
-          <Confetti show={open} onDone={()=>{}} />
           <motion.div
             className="fixed inset-0 z-[50] bg-black/50"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

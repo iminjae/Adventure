@@ -60,4 +60,11 @@
               바로 claimExpedition 호출 시 “not ended” 리버트 확인
 
 
+6) 업그레이드 테스트(User1)
+
+    1. Admin → setUpgradeConf(1, 1, 10000)  : 1등급 1장 넣고 돌리면 100% 2등급으로 업글
+    2. User1 → upgradeGrade([tokenId])
+        기대 : 기존 tokenId 소각, 등급2 신규토큰 1개 발행
+    
+    
     
