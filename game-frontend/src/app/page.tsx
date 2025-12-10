@@ -102,8 +102,8 @@ const claimLabel =
       <Card className="col-span-12 p-6 flex items-center justify-between">
         <div>
           <div className="text-sm text-muted">Welcome back, Adventurer</div>
-          <h1 className="section-title text-2xl mt-1">대시보드</h1>
-          <div className="text-sm text-muted mt-1">출석 · 조각 · 합성</div>
+          <h1 className="section-title text-2xl mt-1">DASHBOADR</h1>
+          <div className="text-sm text-muted mt-1">출석</div>
           <div className="mt-5 flex flex-wrap items-center gap-10">
           {(!addr || !daily.hydrated || !daily.nextAt) ? (
                <span className="inline-block h-10 w-40 rounded-full bg-white/10 animate-pulse" />

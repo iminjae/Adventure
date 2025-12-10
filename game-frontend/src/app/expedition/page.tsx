@@ -33,7 +33,7 @@ export default function ExpeditionPage(){
         <div>
           <div className="text-sm text-muted">Explore the world</div>
           <h1 className="section-title text-2xl mt-1">Expedition</h1>
-          <div className="text-sm text-muted mt-1">보유 NFT로 탐험을 시작하고 보상을 수령하세요</div>
+          <div className="text-sm text-muted mt-1">탐험</div>
         </div>
         {!addr ? (
           <Button className="btn-primary px-6 h-11 text-[15px]" onClick={connect}>
