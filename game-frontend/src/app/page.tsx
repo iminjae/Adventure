@@ -12,6 +12,8 @@ import PromoPanel from "@/components/PromoPanel";
 import { useAttBalance } from "@/hooks/useAttBalance";
 import { useRouter } from "next/navigation";
 import DocsPanel from "@/components/docsPanel";
+import { useEffect, useState } from "react";
+import PortfolioNoticeModal from "@/components/ui/PortfolioNoticeModal";
 
 const dailyIface = new Interface([
   "event DailyClaim(address indexed user, uint256 amount, uint64 dayIndexKST)"
@@ -24,11 +26,19 @@ export default function Home(){
   const daily = useDaily(addr);
   const { runTx, running } = useTx();
 
-  // const [okOpen, setOkOpen] = useState(false);
-  // const [okMsg, setOkMsg] = useState("");
-  // const [errOpen, setErrOpen] = useState(false);
-  // const [errMsg, setErrMsg] = useState("");
   const router = useRouter();
+
+  const [noticeOpen, setNoticeOpen] = useState(false);
+
+  useEffect(() => {
+    // 최초 진입 시 한 번만 노출
+    try {
+      const seen = localStorage.getItem("portfolio.notice.dismissed.v1");
+      if (!seen) setNoticeOpen(true);
+    } catch {
+      setNoticeOpen(true);
+    }
+  }, []);
 
   async function onClaim(){
     if (!sc) return;
@@ -171,6 +181,11 @@ const claimLabel =
       <DocsPanel />
       {/* <SuccessModal open={okOpen} title="출석 성공" subtitle={okMsg} onClose={()=>setOkOpen(false)} />
       <ErrorModal open={errOpen} title="출석 실패" message={errMsg} onClose={()=>setErrOpen(false)} /> */}
+      <PortfolioNoticeModal
+        open={noticeOpen}
+        onClose={() => setNoticeOpen(false)}
+        telegram={"https://t.me/mantaminjae"}
+      />
     </section>
   );
 }

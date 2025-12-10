@@ -20,7 +20,7 @@ export default function AppHeader(){
           <div className="w-9 h-9 rounded-lg bg-gradient-to-b from-primary to-primary-600 flex items-center justify-center shadow-glow">
             <Compass className="w-5 h-5 text-white"/>
           </div>
-          <div className="font-display text-lg">Expedition</div>
+          <div className="font-display text-lg">Adventure</div>
           <span className="badge">portfolio</span>
         </motion.div>
 
@@ -28,12 +28,10 @@ export default function AppHeader(){
         <div className="flex items-center gap-2">
           <nav className="hidden md:flex items-center gap-1 mr-2">
             <Nav href="/" label="Dashboard"/>
-            {/* <Nav href="/attendance" label="Attendance"/> */}
-            {/* <Nav href="/fragments" label="Fragments"/> */}
             <Nav href="/craft" label="Craft"/>
             <Nav href="/expedition" label="Expedition"/>
             <Nav href="/upgrade" label="Upgrade"/>
-            <Nav href="/admin" label="Admin"/>
+            {/* <Nav href="/admin" label="Admin"/> */}
           </nav>
           <WalletButton />
         </div>
