@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.19;
 
 /**
  * @title GameCore
@@ -114,10 +114,10 @@ contract GameCore is AccessControl, Pausable, ReentrancyGuard {
         treasury = _treasury;
 
         // 기본 탐험 설정(등급: 시간/보상범위/드랍확률)
-        expeditionOf[1] = ExpeditionConf(30 minutes, 1, 3, 300);   // 3%
-        expeditionOf[2] = ExpeditionConf(60 minutes, 3, 6, 500);   // 5%
-        expeditionOf[3] = ExpeditionConf(120 minutes, 6, 12, 700); // 7%
-        expeditionOf[4] = ExpeditionConf(180 minutes, 12, 24, 900);// 9%
+        expeditionOf[1] = ExpeditionConf(5 minutes, 1, 3, 300);   // 3%
+        expeditionOf[2] = ExpeditionConf(5 minutes, 3, 6, 500);   // 5%
+        expeditionOf[3] = ExpeditionConf(5 minutes, 6, 12, 700); // 7%
+        expeditionOf[4] = ExpeditionConf(5 minutes, 12, 24, 900);// 9%
 
         // 업그레이드(동일 등급 N장 → 상위)
         upgradeNeedCount[1] = 3; upgradeSuccessBps[1] = 4500; // 45%

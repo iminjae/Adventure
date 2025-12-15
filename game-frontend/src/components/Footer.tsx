@@ -20,7 +20,7 @@ export default function Footer() {
           <p className="text-sm text-white/70 leading-relaxed">
             본 서비스는 <b>포트폴리오 데모</b>입니다. 표시되는 토큰·NFT는 <b>금전적 가치가 없습니다</b>.
             테스트/시연 목적으로만 사용해 주세요.
-          </p>
+          </p> 
 
           <div className="flex items-center gap-2">
             <a
