@@ -14,6 +14,7 @@
     5.	AdventureNFT → grantRole(MINTER_ROLE, GameCore)
     6.	AdventureNFT → grantRole(BURNER_ROLE, GameCore)
     7.	hasRole(role, GameCore)로 각 롤이 실제로 들어갔는지 확인.
+    8.  Gamecore → setPromoConfig(codeHash, rewardAtt, enabled) : 프로모션 코드
 
     * MINTER_ROLE()/BURNER_ROLE()/DEFAULT_ADMIN_ROLE()은 READ에서 눌러 bytes32 값 복사 가능.
 
