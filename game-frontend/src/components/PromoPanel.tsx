@@ -98,14 +98,14 @@ export default function PromoPanel({ sc, onAfterSuccess, bare = false }: Props) 
         면접자가 제공한 코드를 입력하면 보상 토큰을 받을 수 있어요.
         <br />
         <span className="text-xs">
-          ⚠️ 입력한 코드는 트랜잭션 데이터에 기록됩니다(온체인 공개). 대소문자/공백까지 정확히 입력하세요.
+          ⚠️ 대소문자/공백까지 정확히 입력하세요.
         </span>
       </p>
 
       <div className="flex gap-2">
         <input
           type="text"
-          placeholder="이력서에 첨부된 코드 입력"
+          placeholder="이력서에 첨부된 면접자 코드 입력"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           onKeyDown={onKeyDown}
