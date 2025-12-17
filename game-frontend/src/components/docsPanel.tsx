@@ -69,14 +69,14 @@ export default function DocsPanel() {
           <ol className="grid gap-2 text-[15px] text-white/85">
             <li><span className="font-semibold">1.</span> PC(Chrome)에서 MetaMask 확장 프로그램에 로그인합니다.</li>
             <li>
-              <span className="font-semibold">2.</span> MetaMask → 네트워크 → <b>네트워크 추가</b> → <b>수동 추가</b>에서 아래 값 입력:
+              <span className="font-semibold">2.</span> MetaMask → 우측 상단 <b>☰</b> → <b>네트워크</b> → <b>+ 사용자 지정 네트워크 추가</b> 에서 아래 값 입력:
               <ul className="mt-2 grid gap-1 text-[13px] text-white/75">
                 <li>• 네트워크 이름: <K>Mintaray</K></li>
                 <li>• 새 RPC URL: <K>https://rpc.mintaray.xyz</K></li>
                 <li>• 체인 ID: <K>6158</K></li>
               </ul>
             </li>
-            <li><span className="font-semibold">3.</span> 저장 후, 상단 네트워크 선택을 <K>Mintaray</K>로 변경합니다.</li>
+            <li><span className="font-semibold">3.</span> 저장 후, 네트워크 선택을 <K>Mintaray</K>로 변경합니다.</li>
             <li><span className="font-semibold">4.</span> 이 사이트에서 <K>지갑 연결</K> 버튼을 눌러 연결을 승인합니다.</li>
             <li><span className="font-semibold">5.</span> 우측 상단에 내 지갑 주소(예: 0xABCD…EF)가 보이면 연결 완료입니다.</li>
             <li><span className="font-semibold">6.</span> 연결 문제 시: 네트워크를 다시 선택하거나, MetaMask 설정 → 고급 → <b>계정 상태 재설정</b>을 시도합니다.</li>
