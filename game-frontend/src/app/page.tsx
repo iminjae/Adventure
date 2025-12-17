@@ -114,9 +114,7 @@ const claimLabel =
           <div className="text-sm text-muted">Welcome back, Adventurer</div>
           <h1 className="section-title text-2xl mt-1">DASHBOADR</h1>
           <div className="text-sm text-muted mt-1">출석</div>
-          <span className="text-xs">
-            ⚠️ PC (Chrome) 환경에서 메타마스크 지갑으로 연결 바랍니다.
-          </span>
+          
           <div className="mt-5 flex flex-wrap items-center gap-10">
           {(!addr || !daily.hydrated || !daily.nextAt) ? (
                <span className="inline-block h-10 w-40 rounded-full bg-white/10 animate-pulse" />
@@ -156,6 +154,7 @@ const claimLabel =
             </div>
              
         </div>
+        
         <PromoPanel
           sc={sc}
           onAfterSuccess={async () => {
@@ -166,6 +165,7 @@ const claimLabel =
                 ]);
           }}
         />
+        
       </Card>
 
       {/* 요약 카드들 */}

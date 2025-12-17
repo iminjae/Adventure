@@ -124,7 +124,7 @@ export default function PromoPanel({ sc, onAfterSuccess, bare = false }: Props) 
       </div>
 
       <div className="mt-2 text-xs text-white/60">
-        • 기본 보상: 운영 설정값(예: 50&nbsp;ATT).&nbsp;
+        • 기본 보상: 운영 설정값(50&nbsp;ATT).&nbsp;
         • 제한 없음(운영에서 변경 시 달라질 수 있음).
       </div>
     </section>

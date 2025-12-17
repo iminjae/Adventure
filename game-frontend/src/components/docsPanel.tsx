@@ -46,7 +46,9 @@ export default function DocsPanel() {
       {/* 본문 */}
       <div className="px-6 py-6 md:px-8 md:py-8">
         {/* 빠른 시작 */}
-        <section className="mb-8">
+       <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        {/* ← 기존 빠른 시작 내용 (왼쪽) */}
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <h3 className="text-lg font-semibold mb-3">🚀 빠른 시작 (30초 요약)</h3>
           <ol className="grid gap-2 text-[15px] text-white/85">
             <li><span className="font-semibold">1.</span> 지갑 연결 → 네트워크 승인</li>
@@ -56,7 +58,31 @@ export default function DocsPanel() {
             <li><span className="font-semibold">5.</span> 같은 등급 NFT N장으로 <K>업그레이드</K> 도전</li>
             <li><span className="font-semibold">6.</span> 면접자 코드가 있으면 입력해 <K>추가 보상</K> 받기</li>
           </ol>
-        </section>
+        </div>
+
+        {/* 지갑 연결 */}
+        <div
+          id="quickstart-side"
+          className="rounded-xl border border-white/10 bg-white/[0.03] p-4 min-h-[220px] lg:sticky lg:top-6"
+        >
+          <h3 className="text-lg font-semibold mb-3"> 🦊 메타마스크 지갑 & 네트워크 연결 TIP</h3>
+          <ol className="grid gap-2 text-[15px] text-white/85">
+            <li><span className="font-semibold">1.</span> PC(Chrome)에서 MetaMask 확장 프로그램에 로그인합니다.</li>
+            <li>
+              <span className="font-semibold">2.</span> MetaMask → 네트워크 → <b>네트워크 추가</b> → <b>수동 추가</b>에서 아래 값 입력:
+              <ul className="mt-2 grid gap-1 text-[13px] text-white/75">
+                <li>• 네트워크 이름: <K>Mintaray</K></li>
+                <li>• 새 RPC URL: <K>https://rpc.mintaray.xyz</K></li>
+                <li>• 체인 ID: <K>6158</K></li>
+              </ul>
+            </li>
+            <li><span className="font-semibold">3.</span> 저장 후, 상단 네트워크 선택을 <K>Mintaray</K>로 변경합니다.</li>
+            <li><span className="font-semibold">4.</span> 이 사이트에서 <K>지갑 연결</K> 버튼을 눌러 연결을 승인합니다.</li>
+            <li><span className="font-semibold">5.</span> 우측 상단에 내 지갑 주소(예: 0xABCD…EF)가 보이면 연결 완료입니다.</li>
+            <li><span className="font-semibold">6.</span> 연결 문제 시: 네트워크를 다시 선택하거나, MetaMask 설정 → 고급 → <b>계정 상태 재설정</b>을 시도합니다.</li>
+          </ol>
+        </div>
+      </section>
 
         {/* 코어 메커닉 4분할 */}
         <section className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
